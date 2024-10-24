@@ -1,0 +1,14 @@
+name: access-ram-dev
+channels:
+  - accessnri
+  - conda-forge
+  - nodefaults
+dependencies:
+  - python=3.11
+  - conda-pack
+  - conda-lock
+  - hypothesis
+  - ipykernel
+  - pytest
+  - pytest-cov
+  - pre_commit
