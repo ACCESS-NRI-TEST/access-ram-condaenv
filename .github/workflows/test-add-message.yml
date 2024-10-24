@@ -1,0 +1,29 @@
+name: Test add message
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+jobs:
+  add-PR-message:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Add PR message
+        uses: access-nri/actions/.github/actions/pr-comment@davide/pr-comment
+        with:
+          number: 2
+          repo: ACCESS-NRI-TEST/replace_landsurface
+          label: dev-env-deployment
+          token: ${{ secrets.PR_ISSUE_ACCESS_TOKEN }}
+          message: |
+            # heading 
+
+            - Bubbi
+            - ciaone
+
+            Development environment deployed successfully at `example`.
+            You can load the environment by runnning:
+            ```py
+            module use example
+            module load example
+            ```
+          

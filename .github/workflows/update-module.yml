@@ -1,0 +1,59 @@
+# name: Update common modulefiles on Gadi
+# on:
+#   workflow_dispatch:
+#   push:
+#     branches:
+#       - main
+#     paths:
+#       - 'modules/**'
+# jobs:
+#   get-deployment-sites:
+#     name: Get Deployment Sites
+#     runs-on: ubuntu-latest
+#     outputs:
+#       deployment-sites: ${{ steps.get-deployment-sites.outputs.deployment-sites }}
+#     steps:
+#       - name: Checkout config
+#         uses: actions/checkout@v4
+
+#       - name: Get sites
+#         id: get-deployment-sites
+#         run: echo "deployment-sites=$(jq --compact-output '.sites' ./config/deployment-sites.json)" >> $GITHUB_OUTPUT
+
+#   deploy:
+#     runs-on: ubuntu-latest
+#     needs: get-deployment-sites
+#     strategy:
+#       fail-fast: false
+#       matrix:
+#         deployment-sites: ${{ fromJson(needs.get-deployment-sites.outputs.deployment-sites) }}
+#     environment: ${{ matrix.deployment-sites }}
+#     steps:
+#       - uses: actions/checkout@v4
+
+#       - uses: access-nri/actions/.github/actions/setup-ssh@main
+#         id: ssh
+#         with:
+#           hosts: |
+#             ${{ secrets.HOST_DATA }}
+#           private-key: ${{ secrets.SSH_KEY }}
+
+#       - name: Generate release modulesfiles
+#         run: |
+#           mkdir -p release/modules
+#           sed 's|{{MODULE_DIR}}|'"${{ vars.MODULE_DIR }}"'|g' modules/.common > release/modules/.common
+#           sed 's|{{APPS_DIR}}|'"${{ vars.APPS_DIR }}"'|g' modules/env.sh > release/modules/env.sh
+#           chmod +x release/modules/env.sh
+
+#       - name: Create deployment directory on ${{ matrix.deployment-sites }}
+#         run: |
+#           ssh ${{ secrets.USER }}@${{ secrets.HOST_DATA }} -i ${{ steps.ssh.outputs.private-key-path }} /bin/bash <<'EOT'
+#           mkdir -p ${{ vars.MODULE_DIR }}
+#           EOT
+
+#       - name: Copy modulefiles to Gadi
+#         run: |
+#           # Rsync release modulefiles
+#           rsync -rvp -e 'ssh -i ${{ steps.ssh.outputs.private-key-path }}' \
+#             release/modules/ \
+#             ${{ secrets.USER }}@${{ secrets.HOST_DATA }}:${{ vars.MODULE_DIR }}
